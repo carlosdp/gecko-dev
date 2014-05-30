@@ -1,0 +1,45 @@
+<!--
+  * This Source Code Form is subject to the terms of the Mozilla Public
+  * License, v. 2.0. If a copy of the MPL was not distributed with this
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ -->
+<!DOCTYPE html>
+<html>
+  <!--
+  https://bugzilla.mozilla.org/show_bug.cgi?id=XXXXXX
+  -->
+<head>
+  <meta charset="utf-8">
+  <title>navigator.requestSync()</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=XXXXXX">Mozilla Bug XXXXXX</a>
+<p id="display"></p>
+<div id="content">
+
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.7">
+
+/** Test for Bug XXXXXX **/
+
+function runTest() {
+}
+
+let testRunner = runTest();
+
+SpecialPowers.pushPrefEnv({'set': [
+    ['dom.syncScheduler.enabled', true],
+  ]},
+  function() { testRunner.next(); }
+);
+
+
+
+</script>
+</pre>
+</body>
+</html>
