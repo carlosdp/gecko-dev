@@ -73,6 +73,7 @@ PARALLEL_DIRS += [
     'system',
     'ipc',
     'identity',
+    'syncscheduler',
     'workers',
     'camera',
     'audiochannel',
