@@ -26,10 +26,6 @@ function nsSyncScheduler(syncSchedulerInternal) {
 }
 
 nsSyncScheduler.prototype = {
-  __exposedProps__: {
-    requestSync: 'r',
-    unregisterSync: 'r',
-  },
 
   /*
    * Request to be scheduled for a synchronization opportunity
