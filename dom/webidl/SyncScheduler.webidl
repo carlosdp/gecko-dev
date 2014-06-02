@@ -11,10 +11,10 @@ enum IntervalOption {
 };
 
 dictionary RequestSyncParams {
-  DOMString? onChange;
-  DOMString? entryPoint;
-  IntervalOption? interval;
-  DOMString? data;
+  DOMString onChange;
+  DOMString entryPoint;
+  IntervalOption interval;
+  DOMString data;
 };
 
 [JSImplementation="@mozilla.org/dom/syncscheduler;1",
