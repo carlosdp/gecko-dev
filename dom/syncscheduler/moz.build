@@ -9,12 +9,7 @@
 # Note - you must sort elements in this list yourself so they are in
 # asciibetical order
 EXTRA_COMPONENTS += [
-    'nsSyncScheduler.js',
-    'nsSyncSchedulerService.js',
+    'SyncScheduler.js',
     'SyncScheduler.manifest',
-]
-
-EXTRA_JS_MODULES += [
-    'SyncScheduler.jsm'
 ]
 

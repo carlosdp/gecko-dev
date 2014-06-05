@@ -6,7 +6,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-dump("$$$ nsSyncScheduler.js\n");
+dump("$$$ SyncScheduler.js\n");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -20,12 +20,12 @@ XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
 
-function nsSyncScheduler(syncSchedulerInternal) {
-  dump("$$$ new nsSyncScheduler\n");
+function SyncScheduler(syncSchedulerInternal) {
+  dump("$$$ new SyncScheduler\n");
   this._internal = syncSchedulerInternal;
 }
 
-nsSyncScheduler.prototype = {
+SyncScheduler.prototype = {
   __exposedProps__: {
     requestSync: 'r',
     unregisterSync: 'r',
@@ -58,12 +58,7 @@ nsSyncScheduler.prototype = {
    *
    */
   requestSync: function(id, params = {}) {
-    let message = {
-      id: id,
-      params: params
-    };
-
-    this._internal._mm.sendAsyncMessage("SyncScheduler:RequestSync", message);
+    dump("$$$ requestSync");
   },
 
   /*
@@ -71,22 +66,22 @@ nsSyncScheduler.prototype = {
    */
 
   unregisterSync: function(id) {
-    this._internal._mm.sendAsyncMessage("SyncScheduler:UnregisterSync", {id: id});
+    dump("$$$ unregisterSync");
   },
 };
 
-function nsSyncSchedulerInternal() {
+function SyncSchedulerInternal() {
 }
 
-nsSyncSchedulerInternal.prototype = {
+SyncSchedulerInternal.prototype = {
   init: function(window) {
-    dump("$$$ init nsSyncSchedulerInternal\n");
+    dump("$$$ init SyncSchedulerInternal\n");
     // Unique id for this caller.  We do not use the window id, because that
     // is not guaranteed (or even likely) to be unique in a multi-proc world
     // like b2g.
     this._id = uuidgen.generateUUID().toString();
     this._mm = cpmm;
-    this._api = new nsSyncScheduler(this);
+    this._api = new SyncScheduler(this);
 
     Services.obs.addObserver(this, "inner-window-destroyed", false);
 
@@ -103,7 +98,7 @@ nsSyncSchedulerInternal.prototype = {
 
   classID: Components.ID("{c73897ea-ffd2-4df4-bcba-a0636e5d1013}"),
 
-  contractID: "@mozilla.org/dom/syncscheduler;1",
+  contractID: "@mozilla.org/dom/syncScheduler;1",
 
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsIDOMGlobalPropertyInitializer,
@@ -112,4 +107,4 @@ nsSyncSchedulerInternal.prototype = {
     Ci.nsIMessageListener]),
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([nsSyncSchedulerInternal]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SyncSchedulerInternal]);
