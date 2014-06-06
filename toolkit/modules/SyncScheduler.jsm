@@ -35,7 +35,16 @@ Service.prototype = {
     Services.obs.removeObserver(this, "quit-application-granted");
   },
 
-  enqueue: function(message) {
+  enqueue: function(message, principal) {
+    let appsService = Cc["@mozilla.org/AppsService;1"]
+                         .getService(Ci.nsIAppsService);
+
+    let manifestURL = appsService.getManifestURLByLocalId(principal.appId);
+    let pageURL = principal.URI;
+
+    dump("** here's where we stash the manifestURL and pageURL: " +
+         manifestURL + ", " + pageURL + "\n");
+
     dump("** STUB - enqueue: " + JSON.stringify(message) + "\n");
   },
 
