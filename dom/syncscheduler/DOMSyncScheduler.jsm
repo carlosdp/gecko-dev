@@ -2,10 +2,9 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-dump("** SyncScheduler.jsm\n");
-
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/SyncScheduler.jsm");
 
 // This is the parent process corresponding to nsSyncScheduler
 this.EXPORTED_SYMBOLS = ["SyncScheduler"];
@@ -25,14 +24,13 @@ this.SyncScheduler = {
                                          Ci.nsISupportsWeakReference]),
 
   init: function() {
-    dump("** init SyncScheduler\n");
+    dump("** DOMSyncScheduler init\n");
     if (!ppmm) {
       return;
     }
     for (let message of this.messages) {
       ppmm.addMessageListener(message, this);
     }
-    dump("   ** done with init\n");
   },
 
   observe: function(subject, topic, data) {
@@ -51,7 +49,7 @@ this.SyncScheduler = {
   receiveMessage: function(data) {
     let msg = data.json;
 
-    dump("** yay! got a message: " + JSON.stringify(msg) + "\n");
+    dump("** DOMSyncScheduler observed: " + JSON.stringify(msg) + "\n");
 
     switch (data.name) {
       case "SyncScheduler:RequestSync":
@@ -69,18 +67,13 @@ this.SyncScheduler = {
   },
 
   enqueue: function(message) {
-    dump("$$$ great! you called enqueue\n");
-    // this is where we'd subscribe to, say, contacts changes, if the
-    // message comes with onChange
-    //
-    // associate changes with caller ids
-    // { 'contacts': [id1, id2, ...] }
-    //
-    //
+    // Enqueue the message in the singleton SyncScheduler toolkit module
+    SyncSchedulerService.enqueue(message);
   },
 
   unregister: function(id) {
-    dump("$$$ great! you called unregister\n");
+    // Unregister the id with the singleton SyncScheduler toolkit module
+    SyncSchedulerService.unregister(id);
   },
 };
 

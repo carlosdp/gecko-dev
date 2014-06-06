@@ -1,4 +1,4 @@
 # nsSyncScheduler.js
-component {c73897ea-ffd2-4df4-bcba-a0636e5d1013} nsSyncScheduler.js
+component {c73897ea-ffd2-4df4-bcba-a0636e5d1013} nsDOMSyncScheduler.js
 contract @mozilla.org/dom/syncscheduler;1 {c73897ea-ffd2-4df4-bcba-a0636e5d1013}
 
