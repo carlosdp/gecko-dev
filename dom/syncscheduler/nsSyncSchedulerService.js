@@ -21,12 +21,13 @@ this.SyncSchedulerService.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference]),
 
-  observe: (subject, topic, data) => {
+  observe: function(subject, topic, data) {
     switch (topic) {
       case "app-startup":
-        // XXX is this ok on app-startup? or do we need to wait for
-        // final-ui-startup for some reason?
-        dump("** app-startup - loading SyncScheduler.jsm\n");
+        Services.obs.addObserver(this, "final-ui-startup", true);
+        break;
+      case "final-ui-startup":
+        dump("** final-ui-startup - loading SyncScheduler.jsm\n");
         Cu.import("resource://gre/modules/SyncScheduler.jsm");
         SyncScheduler.init();
         break;
