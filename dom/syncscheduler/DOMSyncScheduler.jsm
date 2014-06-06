@@ -46,18 +46,16 @@ this.SyncScheduler = {
     }
   },
 
-  receiveMessage: function(data) {
-    let msg = data.json;
+  receiveMessage: function(message) {
+    let data = message.data;
 
-    dump("** DOMSyncScheduler observed: " + JSON.stringify(msg) + "\n");
-
-    switch (data.name) {
+    switch (message.name) {
       case "SyncScheduler:RequestSync":
-        this.enqueue(msg);
+        this.enqueue(data, message.principal);
         break;
 
       case "SyncScheduler:UnregisterSync":
-        this.unregister(msg.id);
+        this.unregister(data.id, message.principal);
         break;
 
       default:
@@ -66,9 +64,17 @@ this.SyncScheduler = {
     }
   },
 
-  enqueue: function(message) {
+  enqueue: function(message, principal) {
+    let appsService = Cc["@mozilla.org/AppsService;1"]
+                         .getService(Ci.nsIAppsService);
+
+    if (!principal.appId) {
+      dump("!! Sorry, this is a b2g thing only\n");
+      return;
+    }
+
     // Enqueue the message in the singleton SyncScheduler toolkit module
-    SyncSchedulerService.enqueue(message);
+    SyncSchedulerService.enqueue(message, principal);
   },
 
   unregister: function(id) {

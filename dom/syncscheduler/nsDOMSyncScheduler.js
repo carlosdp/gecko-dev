@@ -31,6 +31,8 @@ nsSyncScheduler.prototype = {
     // like b2g.
     this._id = uuidgen.generateUUID().toString();
     this._mm = cpmm;
+    this._principal = window.document.nodePrincipal;
+    dump("** this._principal: " + this._principal + "\n");
 
     Services.obs.addObserver(this, "inner-window-destroyed", false);
   },
@@ -77,12 +79,13 @@ nsSyncScheduler.prototype = {
    *
    */
   requestSync: function(id, params = {}) {
+    // XXX why do my params not get passed across?
     let message = {
       id: id,
-      params: params
+      params: JSON.stringify(params),
     };
 
-    this._mm.sendAsyncMessage("SyncScheduler:RequestSync", message);
+    this._mm.sendAsyncMessage("SyncScheduler:RequestSync", message, null, this._principal);
   },
 
   /*
