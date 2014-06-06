@@ -6,11 +6,9 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-dump("$$$ nsSyncScheduler.js\n");
-
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/SyncScheduler.jsm");
+Cu.import("resource://gre/modules/DOMSyncScheduler.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
@@ -20,12 +18,37 @@ XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
 
-function nsSyncScheduler(syncSchedulerInternal) {
-  dump("$$$ new nsSyncScheduler\n");
-  this._internal = syncSchedulerInternal;
+function nsSyncScheduler() {
 }
 
 nsSyncScheduler.prototype = {
+
+  // nsIDOMGlobalPropertyInitializer
+  init: function(window) {
+    dump("** init nsDOMSyncScheduler\n");
+    // Unique id for this caller.  We do not use the window id, because that
+    // is not guaranteed (or even likely) to be unique in a multi-proc world
+    // like b2g.
+    this._id = uuidgen.generateUUID().toString();
+    this._mm = cpmm;
+
+    Services.obs.addObserver(this, "inner-window-destroyed", false);
+  },
+
+  // nsIObserver
+  observe: function(subject, topic, data) {
+    Services.obs.removeObserver(this, "inner-window-destroyed");
+  },
+
+  classID: Components.ID("{c73897ea-ffd2-4df4-bcba-a0636e5d1013}"),
+
+  contractID: "@mozilla.org/dom/syncscheduler;1",
+
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsIDOMGlobalPropertyInitializer,
+    Ci.nsISupports,
+    Ci.nsIObserver,
+    Ci.nsIMessageListener]),
 
   /*
    * Request to be scheduled for a synchronization opportunity
@@ -59,7 +82,7 @@ nsSyncScheduler.prototype = {
       params: params
     };
 
-    this._internal._mm.sendAsyncMessage("SyncScheduler:RequestSync", message);
+    this._mm.sendAsyncMessage("SyncScheduler:RequestSync", message);
   },
 
   /*
@@ -67,45 +90,8 @@ nsSyncScheduler.prototype = {
    */
 
   unregisterSync: function(id) {
-    this._internal._mm.sendAsyncMessage("SyncScheduler:UnregisterSync", {id: id});
+    this._mm.sendAsyncMessage("SyncScheduler:UnregisterSync", {id: id});
   },
 };
 
-function nsSyncSchedulerInternal() {
-}
-
-nsSyncSchedulerInternal.prototype = {
-  init: function(window) {
-    dump("$$$ init nsSyncSchedulerInternal\n");
-    // Unique id for this caller.  We do not use the window id, because that
-    // is not guaranteed (or even likely) to be unique in a multi-proc world
-    // like b2g.
-    this._id = uuidgen.generateUUID().toString();
-    this._mm = cpmm;
-    this._api = new nsSyncScheduler(this);
-
-    Services.obs.addObserver(this, "inner-window-destroyed", false);
-
-    this.requestSync = this._api.requestSync.bind(this._api);
-    this.unregisterSync = this._api.unregisterSync.bind(this._api);
-  },
-
-  /*
-   * Inner window destroyed; clean up
-   */
-  observe: function(subject, topic, data) {
-    // remove listeners and stuff
-  },
-
-  classID: Components.ID("{c73897ea-ffd2-4df4-bcba-a0636e5d1013}"),
-
-  contractID: "@mozilla.org/dom/syncscheduler;1",
-
-  QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsIDOMGlobalPropertyInitializer,
-    Ci.nsISupports,
-    Ci.nsIObserver,
-    Ci.nsIMessageListener]),
-};
-
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([nsSyncSchedulerInternal]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([nsSyncScheduler]);
