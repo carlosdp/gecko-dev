@@ -10,7 +10,6 @@
 # asciibetical order
 EXTRA_COMPONENTS += [
     'nsDOMSyncScheduler.js',
-    'nsSyncSchedulerService.js',
     'SyncScheduler.manifest',
 ]
 
