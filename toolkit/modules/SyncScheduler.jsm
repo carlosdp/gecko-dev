@@ -29,7 +29,7 @@ Service.prototype = {
         break;
     }
   },
-
+ 
   shutdown: function() {
     dump("** sync scheduler toolkit module shutting down\n");
     Services.obs.removeObserver(this, "quit-application-granted");
