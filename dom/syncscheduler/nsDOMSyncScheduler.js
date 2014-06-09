@@ -34,7 +34,6 @@ nsSyncScheduler.prototype = {
     this._id = uuidgen.generateUUID().toString();
     this._mm = cpmm;
     this._principal = window.document.nodePrincipal;
-    dump("** this._principal: " + this._principal + "\n");
 
     Services.obs.addObserver(this, "inner-window-destroyed", false);
   },
