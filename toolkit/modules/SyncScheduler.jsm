@@ -13,6 +13,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 this.EXPORTED_SYMBOLS = ["SyncSchedulerService"];
 
+dump("** Ye Olde Sync Scheduler module\n");
+
 XPCOMUtils.defineLazyGetter(this, "messenger", function() {
   return Cc["@mozilla.org/system-message-internal;1"]
             .getService(Ci.nsISystemMessagesInternal);
