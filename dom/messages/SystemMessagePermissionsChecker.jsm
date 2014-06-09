@@ -89,6 +89,7 @@ this.SystemMessagePermissionsTable = {
   "sms-sent": {
     "sms": []
   },
+  "sync": { },
   "telephony-new-call": {
     "telephony": []
   },

@@ -48,6 +48,7 @@ Service.prototype = {
     let manifestURI = Services.io.newURI(alarm.manifestURL, null, null);
 
     messenger.sendMessage("sync", message, pageURI, manifestURI);
+    dump("** sent sync system message\n");
   },
 
   _notifySyncRequester: function(alarm) {
@@ -70,12 +71,9 @@ Service.prototype = {
                          .getService(Ci.nsIAppsService);
 
     let manifestURL = appsService.getManifestURLByLocalId(principal.appId);
-    let pageURL = principal.URI;
 
-    dump("** here's where we stash the manifestURL and pageURL: " +
-         manifestURL + ", " + pageURL + "\n");
-
-    dump("** STUB - enqueue: " + JSON.stringify(message) + "\n");
+    // XXX hack until we figure out the right way to do this
+    let pageURL = manifestURL.split("/manifest.webapp")[0] + "/index.html"
 
     // XXX for testing, fire a system message right back at the app
     this._notifySyncRequester({
