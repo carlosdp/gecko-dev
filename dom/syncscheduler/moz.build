@@ -8,7 +8,7 @@
 
 # Note - you must sort elements in this list yourself so they are in
 # asciibetical order
-EXTRA_COMPONENTS += [
+EXTRA_PP_COMPONENTS += [
     'nsDOMSyncScheduler.js',
     'SyncScheduler.manifest',
 ]
