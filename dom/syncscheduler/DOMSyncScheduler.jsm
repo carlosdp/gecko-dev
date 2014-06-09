@@ -28,8 +28,8 @@ this.SyncScheduler = {
     if (!ppmm) {
       return;
     }
-    for (let message of this.messages) {
-      ppmm.addMessageListener(message, this);
+    for (let msgName of this.messages) {
+      ppmm.addMessageListener(msgName, this);
     }
   },
 
@@ -83,4 +83,4 @@ this.SyncScheduler = {
   },
 };
 
-this.SyncScheduler.init();
+SyncScheduler.init();
