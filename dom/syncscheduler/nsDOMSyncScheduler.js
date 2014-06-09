@@ -8,6 +8,9 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+#ifndef MOZ_B2G
+Cu.import('resource://gre/modules/DOMSyncScheduler.jsm');
+#endif
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
