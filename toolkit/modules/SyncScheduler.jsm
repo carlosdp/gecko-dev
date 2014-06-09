@@ -13,9 +13,15 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 this.EXPORTED_SYMBOLS = ["SyncSchedulerService"];
 
+XPCOMUtils.defineLazyGetter(this, "messenger", function() {
+  return Cc["@mozilla.org/system-message-internal;1"]
+            .getService(Ci.nsISystemMessagesInternal);
+});
+
 function Service() {
   dump("** creating toolkit sync scheduler service\n");
   Services.obs.addObserver(this, "quit-application-granted", false);
+  // XXX subscribe to app-uninstalled and unregister
 }
 
 Service.prototype = {
@@ -25,15 +31,37 @@ Service.prototype = {
   observe: function (subject, topic, data) {
     switch (topic) {
       case "quit-application-granted":
-        this.shutdown();
+        this._shutdown();
         break;
     }
   },
+
+  _fireSystemMessage: function(alarm) {
+    let message = {
+      id: alarm.id,
+      date: alarm.date,
+      data: alarm.data
+    };
+    let pageURI = Services.io.newURI(alarm.pageURL, null, null);
+    let manifestURI = Services.io.newURI(alarm.manifestURL, null, null);
+
+    messenger.sendMessage("sync", message, pageURI, manifestURI);
+  },
+
+  _notifySyncRequester: function(alarm) {
+    if (alarm.manifestURL) {
+      return this._fireSystemMessage(alarm);
+    }
+  },
  
-  shutdown: function() {
+  _shutdown: function() {
     dump("** sync scheduler toolkit module shutting down\n");
     Services.obs.removeObserver(this, "quit-application-granted");
   },
+
+  /*
+   * Public methods
+   */
 
   enqueue: function(message, principal) {
     let appsService = Cc["@mozilla.org/AppsService;1"]
@@ -46,11 +74,20 @@ Service.prototype = {
          manifestURL + ", " + pageURL + "\n");
 
     dump("** STUB - enqueue: " + JSON.stringify(message) + "\n");
+
+    // XXX for testing, fire a system message right back at the app
+    this._notifySyncRequester({
+      id: message.id,
+      manifestURL: manifestURL,
+      pageURL: pageURL,
+      date: Date.now(),
+      data: "I like pie",
+    });
   },
 
   unregister: function(id) {
     dump("** STUB - unregister: " + id + "\n");
-  }
+  },
 
 };
 
