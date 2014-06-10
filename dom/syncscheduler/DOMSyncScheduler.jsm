@@ -10,6 +10,7 @@ Cu.import("resource://gre/modules/SyncScheduler.jsm");
 this.EXPORTED_SYMBOLS = ["SyncScheduler"];
 
 const DEBUG = true;
+const REFRESH_INTERVAL = 10;
 
 function debug(message) {
   if(DEBUG)
@@ -50,8 +51,6 @@ this.SyncScheduler = {
     this.queue = {};
     this.timerSet = false;
     this.currentId = 0;
-
-    timer.init(this, 5*1000, 0);
   },
 
   observe: function(subject, topic, data) {
@@ -66,6 +65,8 @@ this.SyncScheduler = {
         }
         break;
       case "timer-callback":
+        this.timerSet = false;
+        this.processRequests();
         break;
     }
   },
@@ -75,8 +76,19 @@ this.SyncScheduler = {
     // we would also reset the timer if necessary.
     // This would be the callback for onChange for
     // connections.
-    for (let id in this.queue) {
-      debug("PROCESS: "+this.queue[id].id);
+    let connection = false; // Replace with mobileConnection/wifi
+
+    if (connection) {
+      for (let id in this.queue) {
+        debug("PROCESS: "+this.queue[id].id);
+      }
+    } else {
+      debug("Not Connected, try again in 10 sec");
+
+      if (!this.timerSet) {
+        timer.init(this, REFRESH_INTERVAL*1000, 0);
+        this.timerSet = true;
+      }
     }
   },
 
