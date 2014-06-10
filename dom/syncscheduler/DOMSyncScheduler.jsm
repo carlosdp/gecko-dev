@@ -9,9 +9,24 @@ Cu.import("resource://gre/modules/SyncScheduler.jsm");
 // This is the parent process corresponding to nsSyncScheduler
 this.EXPORTED_SYMBOLS = ["SyncScheduler"];
 
+const DEBUG = true;
+
+function debug(message) {
+  if(DEBUG)
+    dump("**SYNC: " + message + "\n");
+};
+
 XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
                                    "nsIMessageListenerManager");
+
+XPCOMUtils.defineLazyServiceGetter(this, "timer",
+                                    "@mozilla.org/timer;1",
+                                    "nsITimer");
+
+XPCOMUtils.defineLazyGetter(this, "appsService", function() {
+  return Cc["@mozilla.org/AppsService;1"].getService(Ci.nsIAppsService);
+});
 
 this.SyncScheduler = {
   messages: [
@@ -24,16 +39,23 @@ this.SyncScheduler = {
                                          Ci.nsISupportsWeakReference]),
 
   init: function() {
-    dump("** DOMSyncScheduler init\n");
+    debug("service init");
     if (!ppmm) {
       return;
     }
     for (let msgName of this.messages) {
       ppmm.addMessageListener(msgName, this);
     }
+
+    this.queue = {};
+    this.timerSet = false;
+    this.currentId = 0;
+
+    timer.init(this, 5*1000, 0);
   },
 
   observe: function(subject, topic, data) {
+    debug("observe: " + topic);
     switch (topic) {
       case "xpcom-shutdown":
         if (!ppmm) {
@@ -43,11 +65,23 @@ this.SyncScheduler = {
           ppmm.removeMessageListener(message, this);
         }
         break;
+      case "timer-callback":
+        break;
+    }
+  },
+
+  processRequests: function() {
+    // Here we would check for connection params
+    // we would also reset the timer if necessary.
+    // This would be the callback for onChange for
+    // connections.
+    for (let id in this.queue) {
+      debug("PROCESS: "+this.queue[id].id);
     }
   },
 
   receiveMessage: function(message) {
-    let data = message.data;
+    let data = message.json;
 
     switch (message.name) {
       case "SyncScheduler:RequestSync":
@@ -59,22 +93,22 @@ this.SyncScheduler = {
         break;
 
       default:
-        dump("** SyncScheduler got unexpected message: " + data.name + "\n");
+        debug("got unexpected message: " + data.name);
         break;
     }
   },
 
-  enqueue: function(message, principal) {
-    let appsService = Cc["@mozilla.org/AppsService;1"]
-                         .getService(Ci.nsIAppsService);
-
+  enqueue: function(data, principal) {
     if (!principal.appId) {
-      dump("!! Sorry, this is a b2g thing only\n");
+      debug("Sorry, this is a b2g thing only");
       return;
     }
 
-    // Enqueue the message in the singleton SyncScheduler toolkit module
-    SyncSchedulerService.enqueue(message, principal);
+    this.queue[this.currentId] = data;
+    this.currentId++;
+    debug("enqueue: " + data.id);
+
+    this.processRequests();
   },
 
   unregister: function(id) {
