@@ -20,6 +20,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
 
+XPCOMUtils.defineLazyGetter(this, "appsService", function() {
+  return Cc["@mozilla.org/AppsService;1"].getService(Ci.nsIAppsService);
+});
+
 function nsSyncScheduler() {
 }
 
@@ -31,9 +35,12 @@ nsSyncScheduler.prototype = {
     // Unique id for this caller.  We do not use the window id, because that
     // is not guaranteed (or even likely) to be unique in a multi-proc world
     // like b2g.
+
     this._id = uuidgen.generateUUID().toString();
     this._mm = cpmm;
-    this._principal = window.document.nodePrincipal;
+    let principal = this._principal = window.document.nodePrincipal;
+    this._pageURL = principal.URI.spec;
+    this._manifestURL = appsService.getManifestURLByLocalId(principal.appId);
 
     Services.obs.addObserver(this, "inner-window-destroyed", false);
   },
@@ -84,6 +91,8 @@ nsSyncScheduler.prototype = {
     let message = {
       id: id,
       params: JSON.stringify(params),
+      pageURL: this._pageURL,
+      manifestURL: this._manifestURL
     };
 
     this._mm.sendAsyncMessage("SyncScheduler:RequestSync", message, null, this._principal);

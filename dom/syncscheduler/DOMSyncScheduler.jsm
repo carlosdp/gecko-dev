@@ -25,6 +25,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "timer",
                                     "@mozilla.org/timer;1",
                                     "nsITimer");
 
+XPCOMUtils.defineLazyGetter(this, "messenger", function() {
+  return Cc["@mozilla.org/system-message-internal;1"].getService(Ci.nsISystemMessagesInternal);
+});
+
 XPCOMUtils.defineLazyGetter(this, "appsService", function() {
   return Cc["@mozilla.org/AppsService;1"].getService(Ci.nsIAppsService);
 });
@@ -51,6 +55,7 @@ this.SyncScheduler = {
     this.queue = {};
     this.timerSet = false;
     this.currentId = 0;
+    this.count = 0;
   },
 
   observe: function(subject, topic, data) {
@@ -76,14 +81,21 @@ this.SyncScheduler = {
     // we would also reset the timer if necessary.
     // This would be the callback for onChange for
     // connections.
-    let connection = false; // Replace with mobileConnection/wifi
 
-    if (connection) {
+    if (this.count > 2) {
       for (let id in this.queue) {
-        debug("PROCESS: "+this.queue[id].id);
+        // Check for conditions and fire
+
+        let request = this.queue[id];
+        debug("PROCESS: " + request.id);
+        let manifestURI = Services.io.newURI(request.manifestURL, null, null);
+        let pageURI = Services.io.newURI(request.pageURL, null, null);
+        messenger.sendMessage("sync", request, pageURI, manifestURI);
       }
     } else {
       debug("Not Connected, try again in 10 sec");
+
+      this.count++;
 
       if (!this.timerSet) {
         timer.init(this, REFRESH_INTERVAL*1000, 0);
