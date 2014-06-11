@@ -18,7 +18,8 @@ dictionary RequestSyncParams {
 };
 
 [JSImplementation="@mozilla.org/dom/syncscheduler;1",
- NavigatorProperty="syncScheduler"]
+ NavigatorProperty="syncScheduler",
+ Pref="dom.backgroundSync.enabled"]
 interface SyncScheduler {
   void requestSync (DOMString id, optional RequestSyncParams params);
   void unregisterSync (DOMString id);
