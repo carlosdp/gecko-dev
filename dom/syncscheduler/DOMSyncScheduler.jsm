@@ -33,6 +33,12 @@ XPCOMUtils.defineLazyGetter(this, "appsService", function() {
   return Cc["@mozilla.org/AppsService;1"].getService(Ci.nsIAppsService);
 });
 
+#ifdef MOZ_B2G_RIL
+XPCOMUtils.defineLazyServiceGetter(this, "mobileConnection",
+                                   "@mozilla.org/ril/content-helper;1",
+                                   "nsIMobileConnectionProvider");
+#endif
+
 this.SyncScheduler = {
   messages: [
     "SyncScheduler:RequestSync",
@@ -55,7 +61,6 @@ this.SyncScheduler = {
     this.queue = {};
     this.timerSet = false;
     this.currentId = 0;
-    this.count = 0;
   },
 
   observe: function(subject, topic, data) {
@@ -82,7 +87,9 @@ this.SyncScheduler = {
     // This would be the callback for onChange for
     // connections.
 
-    if (this.count > 2) {
+    let dataConn = mobileConnection.getDataConnectionInfo(0);
+
+    if (dataConn && dataConn.connected) {
       for (let id in this.queue) {
         // Check for conditions and fire
 
@@ -94,8 +101,6 @@ this.SyncScheduler = {
       }
     } else {
       debug("Not Connected, try again in 10 sec");
-
-      this.count++;
 
       if (!this.timerSet) {
         timer.init(this, REFRESH_INTERVAL*1000, 0);
