@@ -13,7 +13,7 @@ EXTRA_PP_COMPONENTS += [
     'SyncScheduler.manifest',
 ]
 
-EXTRA_JS_MODULES += [
+EXTRA_PP_JS_MODULES += [
     'DOMSyncScheduler.jsm'
 ]
 
