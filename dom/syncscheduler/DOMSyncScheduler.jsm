@@ -61,6 +61,8 @@ this.SyncScheduler = {
     this.queue = {};
     this.timerSet = false;
     this.currentId = 0;
+
+    this._mm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsISyncMessageSender);
   },
 
   observe: function(subject, topic, data) {
@@ -88,8 +90,12 @@ this.SyncScheduler = {
     // connections.
 
     let dataConn = mobileConnection.getDataConnectionInfo(0);
+    let wifiConn = this._mm.sendSyncMessage("WifiManager:getState")[0];
 
-    if (dataConn && dataConn.connected) {
+    debug(JSON.stringify(dataConn));
+    debug(JSON.stringify(wifiConn));
+
+    if ((dataConn && dataConn.connected) || wifiConn.status == "connected") {
       for (let id in this.queue) {
         // Check for conditions and fire
 
