@@ -85,9 +85,11 @@ nsSyncScheduler.prototype = {
    *
    *         data:         Any additional data that may be needed by the event.
    *
+   *         wifiOnly:     If true, only fire sync event when a wifi connection
+   *                       is established.
+   *
    */
   requestSync: function(id, params = {}) {
-    // XXX why do my params not get passed across?
     let message = {
       id: id,
       params: JSON.stringify(params),
