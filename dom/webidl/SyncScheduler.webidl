@@ -11,9 +11,10 @@ enum IntervalOption {
 };
 
 dictionary RequestSyncParams {
-  DOMString onChange;
-  DOMString entryPoint;
   IntervalOption interval;
+  boolean repeating;
+  short minInterval;
+  boolean wifiOnly;
   DOMString data;
 };
 

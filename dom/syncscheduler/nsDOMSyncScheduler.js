@@ -90,9 +90,10 @@ nsSyncScheduler.prototype = {
    *
    */
   requestSync: function(id, params = {}) {
+    dump("NSSYNC: " + JSON.stringify(params));
     let message = {
       id: id,
-      params: JSON.stringify(params),
+      params: params,
       pageURL: this._pageURL,
       manifestURL: this._manifestURL
     };
@@ -105,7 +106,7 @@ nsSyncScheduler.prototype = {
    */
 
   unregisterSync: function(id) {
-    this._mm.sendAsyncMessage("SyncScheduler:UnregisterSync", {id: id});
+    this._mm.sendAsyncMessage("SyncScheduler:UnregisterSync", {id: id}, null, this._principal);
   },
 };
 
