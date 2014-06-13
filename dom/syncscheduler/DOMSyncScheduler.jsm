@@ -10,7 +10,7 @@ Cu.import("resource://gre/modules/SyncScheduler.jsm");
 this.EXPORTED_SYMBOLS = ["SyncScheduler"];
 
 const DEBUG = true;
-const REFRESH_INTERVAL = 10;
+const CHECK_INTERVAL = 10;
 
 function debug(message) {
   if(DEBUG)
@@ -60,7 +60,8 @@ this.SyncScheduler = {
 
     this.queue = {};
     this.timerSet = false;
-    this.currentId = 0;
+
+    this.currentInterval = CHECK_INTERVAL;
 
     this._mm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsISyncMessageSender);
   },
@@ -96,20 +97,43 @@ this.SyncScheduler = {
     debug(JSON.stringify(wifiConn));
 
     if ((dataConn && dataConn.connected) || wifiConn.status == "connected") {
+      this.currentInterval = 0;
+
       for (let id in this.queue) {
         // Check for conditions and fire
 
         let request = this.queue[id];
-        debug("PROCESS: " + request.id);
-        let manifestURI = Services.io.newURI(request.manifestURL, null, null);
-        let pageURI = Services.io.newURI(request.pageURL, null, null);
-        messenger.sendMessage("sync", request, pageURI, manifestURI);
+
+        if (!request.params.wifiOnly || wifiConn.status == "connected") {
+          debug("PROCESS: " + request.id);
+          let manifestURI = Services.io.newURI(request.manifestURL, null, null);
+          let pageURI = Services.io.newURI(request.pageURL, null, null);
+          messenger.sendMessage("sync", request, pageURI, manifestURI);
+
+          if (request.params.repeating) {
+            if (request.params.minInterval && (this.currentInterval == 0 || request.params.minInterval < this.currentInterval)) {
+              this.currentInterval = request.params.minInterval;
+            }
+          } else {
+            delete this.queue[id];
+          }
+        } else {
+          debug(request.id + " requires wifi connection");
+
+          if (request.params.minInterval && (this.currentInterval == 0 || request.params.minInterval < this.currentInterval))
+            this.currentInterval = request.params.minInterval;
+        }
+      }
+
+      if (!this.timerSet && this.currentInterval > 0) {
+        timer.init(this, this.currentInterval*1000, 0);
+        this.timerSet = true;
       }
     } else {
       debug("Not Connected, try again in 10 sec");
 
       if (!this.timerSet) {
-        timer.init(this, REFRESH_INTERVAL*1000, 0);
+        timer.init(this, this.currentInterval*1000, 0);
         this.timerSet = true;
       }
     }
@@ -139,16 +163,18 @@ this.SyncScheduler = {
       return;
     }
 
-    this.queue[this.currentId] = data;
-    this.currentId++;
+    this.queue[principal.appId + "+" + data.id] = data;
     debug("enqueue: " + data.id);
+
+    if (data.params.minInterval && data.params.minInterval > 0 && (this.currentInterval == 0 || data.params.minInterval < this.currentInterval))
+      this.currentInterval = data.params.minInterval;
 
     this.processRequests();
   },
 
-  unregister: function(id) {
+  unregister: function(id, principal) {
     // Unregister the id with the singleton SyncScheduler toolkit module
-    SyncSchedulerService.unregister(id);
+    delete this.queue[principal.appId + "+" + id];
   },
 };
 
