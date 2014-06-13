@@ -15,7 +15,7 @@ dictionary RequestSyncParams {
   boolean repeating;
   short minInterval;
   boolean wifiOnly;
-  DOMString data;
+  any data;
 };
 
 [JSImplementation="@mozilla.org/dom/syncscheduler;1",
