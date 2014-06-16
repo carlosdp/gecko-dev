@@ -133,6 +133,7 @@ this.SyncScheduler = {
       debug("Not Connected, try again in 10 sec");
 
       if (!this.timerSet) {
+        this.currentInterval = CHECK_INTERVAL;
         timer.init(this, this.currentInterval*1000, 0);
         this.timerSet = true;
       }
