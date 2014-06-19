@@ -1,10 +1,14 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/SyncScheduler.jsm");
+Cu.import("resource://gre/modules/SyncDB.jsm");
 
 // This is the parent process corresponding to nsSyncScheduler
 this.EXPORTED_SYMBOLS = ["SyncScheduler"];
@@ -64,6 +68,21 @@ this.SyncScheduler = {
     this.currentInterval = CHECK_INTERVAL;
 
     this._mm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsISyncMessageSender);
+
+    this.db = new SyncDB();
+    this.db.init();
+
+    this.db.getAll(
+      "",
+      function getAllSuccessCb(aSyncs) {
+        debug("Sync from DB: " +
+              JSON.stringify(aSyncs));
+        this.queue = aSyncs;
+        this.processRequests();
+      }.bind(this),
+      function getAllErrorCb(aErrorMsg) {
+      }.bind(this)
+    );
   },
 
   observe: function(subject, topic, data) {
@@ -164,13 +183,26 @@ this.SyncScheduler = {
       return;
     }
 
-    this.queue[principal.appId + "+" + data.id] = data;
-    debug("enqueue: " + data.id);
+    data.id = principal.appId + "+" + data.id;
 
-    if (data.params.minInterval && data.params.minInterval > 0 && (this.currentInterval == 0 || data.params.minInterval < this.currentInterval))
-      this.currentInterval = data.params.minInterval;
+    this.db.add(
+      data,
+      function addSuccessCb(aNewId) {
+        debug("Callback after adding alarm in database.");
 
-    this.processRequests();
+        data['id'] = aNewId;
+
+        this.queue[data.syncId] = data;
+        debug("enqueue: " + data.id);
+
+        if (data.params.minInterval && data.params.minInterval > 0 && (this.currentInterval == 0 || data.params.minInterval < this.currentInterval))
+          this.currentInterval = data.params.minInterval;
+
+        this.processRequests();
+      }.bind(this),
+      function addErrorCb(aErrorMsg) {
+      }.bind(this)
+    );
   },
 
   unregister: function(id, principal) {
