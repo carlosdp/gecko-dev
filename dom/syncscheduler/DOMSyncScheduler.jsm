@@ -134,7 +134,10 @@ this.SyncScheduler = {
               this.currentInterval = request.params.minInterval;
             }
           } else {
-            delete this.queue[id];
+            this.db.remove(id, null, function() {
+              delete this.queue[id];
+            }, function() {
+            });
           }
         } else {
           debug(request.id + " requires wifi connection");
@@ -207,7 +210,11 @@ this.SyncScheduler = {
 
   unregister: function(id, principal) {
     // Unregister the id with the singleton SyncScheduler toolkit module
-    delete this.queue[principal.appId + "+" + id];
+    let syncId = principal.appId + "+" + id;
+    this.db.remove(syncId, null, function() {
+      delete this.queue[syncId];
+    }, function() {
+    });
   },
 };
 
