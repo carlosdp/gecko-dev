@@ -111,13 +111,14 @@ this.SyncScheduler = {
     // This would be the callback for onChange for
     // connections.
 
-    let dataConn = mobileConnection.getDataConnectionInfo(0);
+    if (mobileConnection)
+      let dataConn = mobileConnection.getDataConnectionInfo(0);
     let wifiConn = this._mm.sendSyncMessage("WifiManager:getState")[0];
 
     debug(JSON.stringify(dataConn));
     debug(JSON.stringify(wifiConn));
 
-    if ((dataConn && dataConn.connected) || wifiConn.status == "connected") {
+    if ((dataConn && dataConn.connected) || (wifiConn && wifiConn.status == "connected")) {
       this.currentInterval = 0;
 
       for (let id in this.queue) {
