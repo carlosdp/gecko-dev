@@ -62,6 +62,8 @@ this.SyncScheduler = {
       ppmm.addMessageListener(msgName, this);
     }
 
+    Services.obs.addObserver(this, "webapps-clear-data",false);
+
     this.queue = {};
     this.timerSet = false;
 
@@ -176,6 +178,41 @@ this.SyncScheduler = {
 
       default:
         debug("got unexpected message: " + data.name);
+        break;
+    }
+  },
+
+  observe: function(aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case "webapps-clear-data":
+        let params =
+          aSubject.QueryInterface(Ci.mozIApplicationClearPrivateDataParams);
+        if (!params) {
+          debug("Error! Fail to remove scheduled syncs for an uninstalled app.");
+          return;
+        }
+
+        // Only remove alarms for apps.
+        if (params.browserOnly) {
+          return;
+        }
+
+        let manifestURL = appsService.getManifestURLByLocalId(params.appId);
+        if (!manifestURL) {
+          debug("Error! Fail to remove scheduled syncs for an uninstalled app.");
+          return;
+
+        this.db.getAll(manifestURL,
+          function(aSyncs) {
+            aSync.forEach(function(aSync) {
+              this.db.remove(aSync.id, null, function() {
+                delete this.queue[id];
+              }, function() {
+              });
+            }, this);
+          }.bind(this),
+          function(){}
+        );
         break;
     }
   },
