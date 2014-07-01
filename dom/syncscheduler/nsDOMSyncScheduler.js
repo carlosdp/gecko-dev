@@ -52,7 +52,7 @@ nsSyncScheduler.prototype = {
 
   classID: Components.ID("{c73897ea-ffd2-4df4-bcba-a0636e5d1013}"),
 
-  contractID: "@mozilla.org/dom/syncscheduler;1",
+  contractID: "@mozilla.org/dom/syncScheduler;1",
 
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsIDOMGlobalPropertyInitializer,
