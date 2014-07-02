@@ -83,6 +83,7 @@ this.SyncScheduler = {
         this.processRequests();
       }.bind(this),
       function getAllErrorCb(aErrorMsg) {
+        debug("Failed to retrieve syncs from DB");
       }.bind(this)
     );
   },
@@ -124,9 +125,11 @@ this.SyncScheduler = {
         this.db.getAll(manifestURL,
           function(aSyncs) {
             aSync.forEach(function(aSync) {
+              delete this.queue[aSync.id];
               this.db.remove(aSync.id, null, function() {
-                delete this.queue[id];
+                debug("removed " + aSync.id);
               }, function() {
+                debug("failed to remove " + aSync.id);
               });
             }, this);
           }.bind(this),
@@ -156,8 +159,6 @@ this.SyncScheduler = {
       this.currentInterval = 0;
 
       for (let id in this.queue) {
-        // Check for conditions and fire
-
         let request = this.queue[id];
 
         if (!request.params.wifiOnly || wifiConn.status == "connected") {
@@ -167,13 +168,15 @@ this.SyncScheduler = {
           messenger.sendMessage("sync", request, pageURI, manifestURI);
 
           if (request.params.repeating) {
-            if (request.params.minInterval && (this.currentInterval == 0 || request.params.minInterval < this.currentInterval)) {
+            if (request.params.minInterval && (this.currentInterval == 0 || request.params.minInterval < this.currentInterval))
               this.currentInterval = request.params.minInterval;
-            }
           } else {
             delete this.queue[id];
+
             this.db.remove(id, null, function() {
+              debug("removed " + id + " from db");
             }, function() {
+              debug("failed to remove " + id + " from db");
             });
           }
         } else {
@@ -241,6 +244,8 @@ this.SyncScheduler = {
         this.processRequests();
       }.bind(this),
       function addErrorCb(aErrorMsg) {
+        debug("failed to add " + data.id);
+        debug(aErrorMsg);
       }.bind(this)
     );
   },
@@ -251,6 +256,7 @@ this.SyncScheduler = {
     this.db.remove(syncId, null, function() {
       delete this.queue[syncId];
     }, function() {
+      debug("could not deregister " + id);
     });
   },
 };
